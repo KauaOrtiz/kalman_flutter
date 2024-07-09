@@ -105,6 +105,10 @@ class _SpeedTrackingPageState extends State<SpeedTrackingPage> {
               'Ganho de Kalman (k): ${kalmanFilter.k.toStringAsFixed(2)}',
               style: TextStyle(fontSize: 20),
             ),
+            Text(
+              'Taxa de Surpresa (Innovation): ${kalmanFilter.innovation.toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 20),
+            ),
           ],
         ),
       ),
@@ -112,20 +116,34 @@ class _SpeedTrackingPageState extends State<SpeedTrackingPage> {
   }
 }
 
+
 class KalmanFilter {
   double q; // Covariância do ruído do processo
   double r; // Covariância do ruído da medição
   double x; // Valor estimado (velocidade)
   double p; // Covariância do erro de estimativa
-  late double k; // Ganho de Kalman
+  double k; // Ganho de Kalman
+  double innovation; // Taxa de surpresa
 
-  KalmanFilter({this.q = 0.001, this.r = 1.0, this.x = 0.0, this.p = 1.0}) : k = 0.0;
+  KalmanFilter({
+    this.q = 0.001,
+    this.r = 1.0,
+    this.x = 0.0,
+    this.p = 1.0,
+  }) : k = 0.0, innovation = 0.0;
 
   double filter(double measurement) {
-
+    // Previsão
     p = p + q;
+
+    // Ganho de Kalman
     k = p / (p + r);
-    x = x + k * (measurement - x);
+
+    // Taxa de Surpresa (Innovation)
+    innovation = measurement - x;
+
+    // Atualização
+    x = x + k * innovation;
     p = (1 - k) * p;
 
     return x;
